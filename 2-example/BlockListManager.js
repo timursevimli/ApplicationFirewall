@@ -5,8 +5,7 @@ const { BlockList } = require('node:net');
 class BlockListManager {
   constructor(rules) {
     this.blockList = new BlockList();
-    this.rules = rules || [];
-    this.update();
+    if (rules) this.update(rules);
   }
 
   check(ip, ipv = 'ipv4') {
@@ -15,32 +14,24 @@ class BlockListManager {
 
   addAddress(ip, ipv = 'ipv4') {
     this.blockList.addAddress(ip, ipv);
-    this.rules.push(ip + ' ' + ipv);
   }
 
-  update() {
+  update(rules) {
     this.blockList = new BlockList();
-    const { rules } = this;
     if (rules.length > 0) {
       for (const rule of rules) {
-        const [ip, ipv] = rule.split(' ');
-        this.blockList.addAddress(ip, ipv);
+        const [ipv, ip] = rule.split(' ').slice(1);
+        this.blockList.addAddress(ip, ipv.toLowerCase());
       }
     }
   }
 
   removeAddress(ip, ipv = 'ipv4') {
-    const index = this.rules.indexOf(ip + ' ' + ipv);
-    if (index > -1) {
-      this.rules.splice(index, 1);
-      return true;
-    }
-    return false;
-  }
-
-  removeAndUpdate(ip, ipv = 'ipv4') {
-    const removed = this.removeAddress(ip, ipv);
-    if (removed) this.update();
+    const hasRule = this.check(ip, ipv);
+    if (!hasRule) return;
+    const { rules } = this.blockList;
+    const newRules = rules.filter((rule) => !rule.includes(ip));
+    this.update(newRules);
   }
 }
 
