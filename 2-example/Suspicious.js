@@ -31,7 +31,7 @@ class Suspicious {
   ban(months = 0) {
     const now = new Date().getTime();
     this.banned = true;
-    this.unBlockTs = now + ONE_MONTH_TIMESTAMP * months;
+    this.blockEnd = now + ONE_MONTH_TIMESTAMP * months;
     // this.blockEnd = now + 10000 + months; // Use for tests!
   }
 
