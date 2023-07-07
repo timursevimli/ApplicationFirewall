@@ -51,7 +51,7 @@ const initFirewall = (datas, blockList) => {
           suspiciousRequests.delete(ip);
         }
         if (validatedBList.check(ip, ipv)) {
-          validatedBList.removeAndUpdate(ip, ipv);
+          validatedBList.removeAddress(ip, ipv);
         }
       };
       timerHandler(timer, suspicious.getRemainingBanTime());
@@ -78,7 +78,7 @@ const firewall = (options = {}, blockList) => {
       if (suspicious.isBanned()) {
         if (!suspicious.isReadyToUnban()) return true;
         suspiciousRequests.delete(ip);
-        validatedBList.removeAndUpdate(ip, suspicious.ipv);
+        validatedBList.removeAddress(ip, suspicious.ipv);
         return interceptor({ url, ip });
       }
       const diff = now - reqTime;
@@ -91,7 +91,7 @@ const firewall = (options = {}, blockList) => {
             suspiciousRequests.delete(ip);
           }
           if (validatedBList.check(ip, suspicious.ipv)) {
-            validatedBList.removeAndUpdate(ip, suspicious.ipv);
+            validatedBList.removeAddress(ip, suspicious.ipv);
           }
         };
         timerHandler(timer, suspicious.getRemainingBanTime());
@@ -108,7 +108,7 @@ const firewall = (options = {}, blockList) => {
             suspiciousRequests.delete(ip);
           }
           if (validatedBList.check(ip, suspicious.ipv)) {
-            validatedBList.removeAndUpdate(ip, suspicious.ipv);
+            validatedBList.removeAddress(ip, suspicious.ipv);
           }
         };
         timerHandler(timer, suspicious.getRemainingBanTime());
