@@ -179,7 +179,7 @@ test('Remove from block list', () => {
   const blockList = new BlockListManager();
   blockList.addAddress('1.1.1.1');
   assert.strictEqual(blockList.check('1.1.1.1'), true);
-  blockList.removeAndUpdate('1.1.1.1');
+  blockList.removeAddress('1.1.1.1');
   assert.strictEqual(blockList.check('1.1.1.1'), false);
 });
 
