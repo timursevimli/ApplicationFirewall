@@ -11,29 +11,21 @@ const REQ_INTERVAL_MS = 10000;
 // TODO: If unblock req without timer, check timer and remove from timers
 const createTimers = () => {
   const timers = [];
-
-  const handler = (fn, msec, ...args) =>  {
-    const timer = setTimeout(() => {
-      fn(...args);
-      const index = timers.indexOf(timer);
-      if (index > -1) timers.splice(index, 1);
-    }, msec);
-    timers.push(timer);
-  };
-
   return {
     addSuspicious: (suspicious, blockList) => {
       const { ip, ipv } = suspicious;
       const msec = suspicious.getRemainingBanTime();
-      const timer = () => {
+      const timer = setTimeout(() => {
         if (suspiciousRequests.has(ip)) {
           suspiciousRequests.delete(ip);
         }
         if (blockList.check(ip, ipv)) {
           blockList.removeAddress(ip, ipv);
         }
-      };
-      handler(timer, msec);
+        const index = timers.indexOf(timer);
+        if (index > -1) timers.splice(index, 1);
+      }, msec);
+      timers.push(timer);
     }
   };
 };
