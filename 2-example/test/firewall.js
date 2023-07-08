@@ -1,12 +1,18 @@
 'use strict';
 
+require('node:events').setMaxListeners(0);
 const assert = require('node:assert');
 const test = require('node:test');
 const suspiciousUrls = require('../../suspiciousUrls.js');
 const { firewall, initFirewall } = require('../firewall.js');
 const BlockListManager = require('../BlockListManager.js');
+const suspiciousRequests = require('../suspiciousRequests.js');
 
 const sleep = (msec) => new Promise((resolve) => setTimeout(resolve, msec));
+const resetData = () =>
+  suspiciousRequests.forEach((v, k) => suspiciousRequests.delete(k));
+
+test.afterEach(resetData);
 
 test('Check suspicious urls', () => {
   let i = 0;
@@ -25,21 +31,21 @@ test('Non-suspicious request', () => {
 });
 
 test('Non-blocking request', () => {
-  const req = { url: '/home', ip: '127.0.0.1' };
+  const req = { url: '/home', ip: '127.0.0.0' };
   const fw = firewall({ maxReqCount: 0 });
   const result = fw(req);
   assert.strictEqual(result, false);
 });
 
 test('Blocking request', () => {
-  const req = { url: '/admin', ip: '127.0.0.2' };
+  const req = { url: '/admin', ip: '127.0.0.0' };
   const fw = firewall({ maxReqCount: 0 });
   const result = fw(req);
   assert.strictEqual(result, true);
 });
 
 test('Requests with count', () => {
-  const req = { url: '/admin', ip: '127.0.0.3' };
+  const req = { url: '/admin', ip: '127.0.0.0' };
   const fw = firewall({ maxReqCount: 1 });
   const res1 = fw(req);
   const res2 = fw(req);
@@ -48,7 +54,7 @@ test('Requests with count', () => {
 });
 
 test('More requests with count', () => {
-  const req = { url: '/admin', ip: '127.0.0.4' };
+  const req = { url: '/admin', ip: '127.0.0.0' };
   const count = 1000;
   const fw = firewall({ maxReqCount: count });
   for (let i = 0; i < count; i++) {
@@ -60,7 +66,7 @@ test('More requests with count', () => {
 });
 
 test('Blocklist for IPv4', () => {
-  const req = { url: '/admin', ip: '127.0.0.5' };
+  const req = { url: '/admin', ip: '127.0.0.0' };
   const blockList = new BlockListManager();
   const fw = firewall({ maxReqCount: 1 }, blockList);
 
@@ -81,14 +87,14 @@ test('Non-Blocking IPv6 request', () => {
 });
 
 test('Blocking IPv6 request', () => {
-  const req = { url: '/admin', ip: '::2' };
+  const req = { url: '/admin', ip: '::1' };
   const fw = firewall({ maxReqCount: 0 });
   const result = fw(req);
   assert.strictEqual(result, true);
 });
 
 test('Blocklist for IPv6', () => {
-  const req = { url: '/admin', ip: '::3' };
+  const req = { url: '/admin', ip: '::1' };
   const blockList = new BlockListManager();
   const fw = firewall({ maxReqCount: 1 }, blockList);
 
@@ -113,7 +119,7 @@ test('Initialization without of firewall data', () => {
       reqTime: now, blockEnd: now + 10000,
     },
     {
-      ip: '::4', ipv: 'ipv6', banned: true, count: 3,
+      ip: '::1', ipv: 'ipv6', banned: true, count: 3,
       reqTime: now, blockEnd: now + 10000,
     },
   ];
@@ -122,7 +128,7 @@ test('Initialization without of firewall data', () => {
 
   const req1 = { url: '/home', ip: '1.1.1.1' };
   const req2 = { url: '/home', ip: '1.1.1.2'  };
-  const req3 = { url: '/home', ip: '::4'  };
+  const req3 = { url: '/home', ip: '::1'  };
 
   const fw = firewall();
 
@@ -140,24 +146,24 @@ test('Initialization with of firewall data', () => {
   const now = Date.now();
   const data = [
     {
-      ip: '1.1.1.3', ipv: 'ipv4', banned: true, count: 3,
+      ip: '1.1.1.1', ipv: 'ipv4', banned: true, count: 3,
       reqTime: now, blockEnd: now + 10000,
     },
     {
-      ip: '1.1.1.4', ipv: 'ipv4', banned: true, count: 3,
+      ip: '1.1.1.2', ipv: 'ipv4', banned: true, count: 3,
       reqTime: now, blockEnd: now + 10000,
     },
     {
-      ip: '::5', ipv: 'ipv6', banned: true, count: 3,
+      ip: '::1', ipv: 'ipv6', banned: true, count: 3,
       reqTime: now, blockEnd: now + 10000,
     },
   ];
 
   initFirewall(data, blockList);
 
-  const res1 = blockList.check('1.1.1.3');
-  const res2 = blockList.check('1.1.1.4', 'ipv4');
-  const res3 = blockList.check('::5', 'ipv6');
+  const res1 = blockList.check('1.1.1.1');
+  const res2 = blockList.check('1.1.1.2', 'ipv4');
+  const res3 = blockList.check('::1', 'ipv6');
 
   assert.strictEqual(res1, true);
   assert.strictEqual(res2, true);
@@ -184,10 +190,10 @@ test('Remove from block list', () => {
 });
 
 test('Remove ban with timer', async () => {
-  const req = { url: '/home', ip: '1.1.1.5' };
+  const req = { url: '/home', ip: '1.1.1.1' };
   const now = Date.now();
   const data = [{
-    ip: '1.1.1.5', ipv: 'ipv4', banned: true, count: 3,
+    ip: '1.1.1.1', ipv: 'ipv4', banned: true, count: 3,
     reqTime: now, blockStart: now, blockEnd: now + 3000,
   }];
 
@@ -196,7 +202,7 @@ test('Remove ban with timer', async () => {
 
   const fw = firewall(blockList);
 
-  const before1 = blockList.check('1.1.1.5');
+  const before1 = blockList.check('1.1.1.1');
   const before2 = fw(req);
 
   assert.strictEqual(before1, true);
@@ -204,7 +210,7 @@ test('Remove ban with timer', async () => {
 
   await sleep(3100);
 
-  const after1 = blockList.check('1.1.1.5');
+  const after1 = blockList.check('1.1.1.1');
   const after2 = fw(req);
 
   assert.strictEqual(after1, false);
@@ -212,7 +218,7 @@ test('Remove ban with timer', async () => {
 });
 
 test('Non-blocking interval request', async () => {
-  const req = { url: '/admin', ip: '1.1.1.6'  };
+  const req = { url: '/admin', ip: '1.1.1.1'  };
   const config = { maxReqCount: 3, reqInterval: 1000 };
   const fw = firewall(config);
   for (let i = 0; i < config.maxReqCount + 1; i++) {
@@ -223,7 +229,7 @@ test('Non-blocking interval request', async () => {
 });
 
 test('Blocking interval request', async () => {
-  const req = { url: '/admin', ip: '1.1.1.7'  };
+  const req = { url: '/admin', ip: '1.1.1.1'  };
   const config = { maxReqCount: 1, reqInterval: 2000 };
   const fw = firewall(config);
   for (let i = 0; i < 3; i++) {
