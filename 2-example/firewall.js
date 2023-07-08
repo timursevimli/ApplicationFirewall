@@ -11,13 +11,30 @@ const REQ_INTERVAL_MS = 10000;
 // TODO: If unblock req without timer, check timer and remove from timers
 const createTimers = () => {
   const timers = [];
-  return (fn, msec, ...args) =>  {
+
+  const handler = (fn, msec, ...args) =>  {
     const timer = setTimeout(() => {
       fn(...args);
       const index = timers.indexOf(timer);
       if (index > -1) timers.splice(index, 1);
     }, msec);
     timers.push(timer);
+  };
+
+  return {
+    addSuspicious: (suspicious, blockList) => {
+      const { ip, ipv } = suspicious;
+      const msec = suspicious.getRemainingBanTime();
+      const timer = () => {
+        if (suspiciousRequests.has(ip)) {
+          suspiciousRequests.delete(ip);
+        }
+        if (blockList.check(ip, ipv)) {
+          blockList.removeAddress(ip, ipv);
+        }
+      };
+      handler(timer, msec);
+    }
   };
 };
 
@@ -46,15 +63,7 @@ const initFirewall = (datas, blockList) => {
     if (!timeToUnban) {
       suspiciousRequests.set(ip, suspicious);
       validatedBList.addAddress(ip, ipv);
-      const timer = () => {
-        if (suspiciousRequests.has(ip)) {
-          suspiciousRequests.delete(ip);
-        }
-        if (validatedBList.check(ip, ipv)) {
-          validatedBList.removeAddress(ip, ipv);
-        }
-      };
-      timerHandler(timer, suspicious.getRemainingBanTime());
+      timerHandler.addSuspicious(suspicious, blockList);
     }
   }
 };
@@ -86,15 +95,7 @@ const firewall = (options = {}, blockList) => {
       if (suspicious.getReqCount() >= maxReqCount) {
         suspicious.ban(banMonths);
         validatedBList.addAddress(ip, suspicious.ipv);
-        const timer = () => {
-          if (suspiciousRequests.has(ip)) {
-            suspiciousRequests.delete(ip);
-          }
-          if (validatedBList.check(ip, suspicious.ipv)) {
-            validatedBList.removeAddress(ip, suspicious.ipv);
-          }
-        };
-        timerHandler(timer, suspicious.getRemainingBanTime());
+        timerHandler.addSuspicious(suspicious, blockList);
         return true;
       }
     } else {
@@ -103,15 +104,7 @@ const firewall = (options = {}, blockList) => {
       if (suspicious.getReqCount() >= maxReqCount) {
         suspicious.ban(banMonths);
         validatedBList.addAddress(ip, suspicious.ipv);
-        const timer = () => {
-          if (suspiciousRequests.has(ip)) {
-            suspiciousRequests.delete(ip);
-          }
-          if (validatedBList.check(ip, suspicious.ipv)) {
-            validatedBList.removeAddress(ip, suspicious.ipv);
-          }
-        };
-        timerHandler(timer, suspicious.getRemainingBanTime());
+        timerHandler.addSuspicious(suspicious, blockList);
         return true;
       }
     }
