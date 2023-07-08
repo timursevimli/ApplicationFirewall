@@ -4,9 +4,9 @@ require('node:events').setMaxListeners(0);
 const assert = require('node:assert');
 const test = require('node:test');
 const suspiciousUrls = require('../../suspiciousUrls.js');
+const suspiciousRequests = require('../suspiciousRequests.js');
 const { firewall, initFirewall } = require('../firewall.js');
 const BlockListManager = require('../BlockListManager.js');
-const suspiciousRequests = require('../suspiciousRequests.js');
 
 const sleep = (msec) => new Promise((resolve) => setTimeout(resolve, msec));
 const resetData = () =>
@@ -27,7 +27,8 @@ test('Check suspicious urls', () => {
 test('Non-suspicious request', () => {
   const req = { url: '/home', ip: '127.0.0.0' };
   const fw = firewall();
-  assert.strictEqual(fw(req), false);
+  const result = fw(req);
+  assert.strictEqual(result, false);
 });
 
 test('Non-blocking request', () => {
