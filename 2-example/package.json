@@ -2,7 +2,7 @@
   "name": "2-example",
   "version": "1.0.0",
   "description": "",
-  "main": "BlockListManager.js",
+  "main": "server.js",
   "directories": {
     "test": "test"
   },
