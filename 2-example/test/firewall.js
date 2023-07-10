@@ -108,7 +108,7 @@ test('Blocklist for IPv6', () => {
   assert.strictEqual(res2, true);
 });
 
-test('Initialization without of firewall data', () => {
+test('Initialization firewall without blocklist', () => {
   const now = Date.now();
   const data = [
     {
@@ -142,7 +142,7 @@ test('Initialization without of firewall data', () => {
   assert.strictEqual(res3, true);
 });
 
-test('Initialization with of firewall data', () => {
+test('Initialization firewall with blocklist', () => {
   const blockList = new BlockListManager();
   const now = Date.now();
   const data = [
