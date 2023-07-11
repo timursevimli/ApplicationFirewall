@@ -35,7 +35,6 @@ class Firewall {
     this.blockList = blockListValidate(blockList);
     this.whiteList = new Set();
     this.suspiciousRequests = new Map();
-    this.suspiciousUrls = options.urls ?? suspiciousUrls;
     this.createSuspicious = (data) => generateSuspicious(data);
   }
 
