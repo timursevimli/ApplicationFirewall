@@ -1,6 +1,6 @@
 'use strict';
 
-const { BlockList } = require('node:net');
+const { BlockList, isIPv4, isIPv6 } = require('node:net');
 const suspiciousUrls = require('../suspiciousUrls.js');
 
 const MAX_REQ_COUNT = 5;
@@ -20,12 +20,19 @@ const blockListValidate = (blockList) => {
   throw new Error('Firewall only works with BlockList instance');
 };
 
+const getIPv = (ip) => {
+  if (isIPv4(ip)) return 'ipv4';
+  else if (isIPv6(ip)) return 'ipv6';
+  throw new Error('Wrong IP format!');
+};
+
 const generateSuspicious = ({ ip, ipv, reqCount, reqTime, banned }) => ({
-  ip, ipv: ipv ? ipv : ip.includes(':') ? 'ipv6' : 'ipv4',
+  ip, ipv: ipv || getIPv(ip),
   reqCount: reqCount || 1,
   reqTime: reqTime || Date.now(),
   banned: banned || false,
 });
+
 
 class Firewall {
   constructor(options = {}, blockList) {
@@ -35,12 +42,11 @@ class Firewall {
     this.blockList = blockListValidate(blockList);
     this.whiteList = new Set();
     this.suspiciousRequests = new Map();
-    this.createSuspicious = (data) => generateSuspicious(data);
   }
 
   interceptor({ url, ip }) {
     if (this.whiteList.has(ip)) return false;
-    const ipv = ip.includes(':') ? 'ipv6' : 'ipv4';
+    const ipv = getIPv(ip);
     const blocked = this.blockList.check(ip, ipv);
     if (blocked) return true;
     const suspicious = this.suspiciousRequests.get(ip);
@@ -69,7 +75,7 @@ class Firewall {
   }
 
   handleNewSuspicious(ip) {
-    const suspicious = this.createSuspicious({ ip });
+    const suspicious = generateSuspicious({ ip });
     this.suspiciousRequests.set(ip, suspicious);
     if (suspicious.reqCount <= this.maxReqCount) return false;
     return this.banSuspicious(suspicious);
@@ -81,7 +87,7 @@ class Firewall {
 
   initFirewall(datas) {
     for (const data of datas) {
-      const suspicious = this.createSuspicious(data);
+      const suspicious = generateSuspicious(data);
       const { ip, ipv } = suspicious;
       this.suspiciousRequests.set(ip, suspicious);
       this.blockList.addAddress(ip, ipv);
