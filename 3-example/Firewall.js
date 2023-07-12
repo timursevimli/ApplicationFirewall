@@ -59,12 +59,13 @@ class Firewall {
   banSuspicious(suspicious) {
     suspicious.banned = true;
     const { ip, ipv } = suspicious;
-    this.blockList.addAddress(ip, ipv);
+    const hasBlocked = this.blockList.check(ip, ipv);
+    if (!hasBlocked) this.blockList.addAddress(ip, ipv);
     return true;
   }
 
   handleExistingSuspicious(suspicious) {
-    if (suspicious.banned) return true;
+    if (suspicious.banned) return this.banSuspicious(suspicious);
     const now = new Date().getTime();
     const lastReqTime = suspicious.reqTime;
     suspicious.reqTime = now;
@@ -86,11 +87,9 @@ class Firewall {
   }
 
   initFirewall(datas) {
-    for (const data of datas) {
-      const suspicious = generateSuspicious(data);
-      const { ip, ipv } = suspicious;
-      this.suspiciousRequests.set(ip, suspicious);
-      this.blockList.addAddress(ip, ipv);
+    for (const suspicious of datas) {
+      this.suspiciousRequests.set(suspicious.ip, suspicious);
+      this.handleExistingSuspicious(suspicious);
     }
   }
 }
