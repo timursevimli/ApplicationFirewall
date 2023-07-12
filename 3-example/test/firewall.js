@@ -16,6 +16,12 @@ const exampleData = [
 
 const sleep = (msec) => new Promise((resolve) => setTimeout(resolve, msec));
 
+test('Throw exception if IP address is invalid', () => {
+  const fw = new Firewall();
+  const error = () => fw.interceptor({ url: '/', ip: '7.7.7.1234' });
+  assert.throws(error, 'Wrong IP Format!');
+});
+
 test('Check suspicious urls', () => {
   let i = 0;
   const fw = new Firewall({ maxReqCount: 0 });
