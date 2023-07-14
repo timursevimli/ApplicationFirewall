@@ -18,7 +18,7 @@ const sleep = (msec) => new Promise((resolve) => setTimeout(resolve, msec));
 
 test('Throw exception if IP address is invalid', () => {
   const fw = new Firewall();
-  const error = () => fw.interceptor({ url: '/', ip: '7.7.7.1234' });
+  const error = () => fw.validateAndDenyAccess({ url: '/', ip: '7.7.7.1234' });
   assert.throws(error, 'Wrong IP Format!');
 });
 
@@ -27,7 +27,7 @@ test('Check suspicious urls', () => {
   const fw = new Firewall({ maxReqCount: 0 });
   for (const url of suspiciousUrls) {
     const req = { url, ip: `10.10.0.${i++}` };
-    const result = fw.interceptor(req);
+    const result = fw.validateAndDenyAccess(req);
     assert.strictEqual(result, true);
   }
 });
@@ -35,29 +35,29 @@ test('Check suspicious urls', () => {
 test('Non-suspicious request', () => {
   const req = { url: '/home', ip: '127.0.0.1' };
   const fw = new Firewall();
-  const result = fw.interceptor(req);
+  const result = fw.validateAndDenyAccess(req);
   assert.strictEqual(result, false);
 });
 
 test('Non-blocking request', () => {
   const req = { url: '/home', ip: '127.0.0.1' };
   const fw = new Firewall({ maxReqCount: 0 });
-  const result = fw.interceptor(req);
+  const result = fw.validateAndDenyAccess(req);
   assert.strictEqual(result, false);
 });
 
 test('Blocking request', () => {
   const req = { url: '/admin', ip: '127.0.0.1' };
   const fw = new Firewall({ maxReqCount: 0 });
-  const result = fw.interceptor(req);
+  const result = fw.validateAndDenyAccess(req);
   assert.strictEqual(result, true);
 });
 
 test('Requests with count', () => {
   const req = { url: '/admin', ip: '127.0.0.1' };
   const fw = new Firewall({ maxReqCount: 1 });
-  const res1 = fw.interceptor(req);
-  const res2 = fw.interceptor(req);
+  const res1 = fw.validateAndDenyAccess(req);
+  const res2 = fw.validateAndDenyAccess(req);
   assert.strictEqual(res1, false);
   assert.strictEqual(res2, true);
 });
@@ -67,10 +67,10 @@ test('More requests with count', () => {
   const count = 1000;
   const fw = new Firewall({ maxReqCount: count });
   for (let i = 0; i < count; i++) {
-    const result = fw.interceptor(req);
+    const result = fw.validateAndDenyAccess(req);
     assert.strictEqual(result, false);
   }
-  const last = fw.interceptor(req);
+  const last = fw.validateAndDenyAccess(req);
   assert.strictEqual(last, true);
 });
 
@@ -79,7 +79,7 @@ test('Whitelist', () => {
   const options = { maxReqCount: 0 };
   const fw = new Firewall(options);
   fw.addAddressToWhiteList(req.ip);
-  const result = fw.interceptor(req);
+  const result = fw.validateAndDenyAccess(req);
   assert.strictEqual(result, false);
 });
 
@@ -96,11 +96,11 @@ test('Blocklist for IPv4', () => {
   const blockList = new BlockList();
   const fw = new Firewall({ maxReqCount: 1 }, blockList);
 
-  fw.interceptor(req);
+  fw.validateAndDenyAccess(req);
   const res1 = blockList.check(req.ip);
   assert.strictEqual(res1, false);
 
-  fw.interceptor(req);
+  fw.validateAndDenyAccess(req);
   const res2 = blockList.check(req.ip);
   assert.strictEqual(res2, true);
 });
@@ -108,14 +108,14 @@ test('Blocklist for IPv4', () => {
 test('Non-Blocking IPv6 request', () => {
   const req = { url: '/home', ip: '::1' };
   const fw = new Firewall({ maxReqCount: 0 });
-  const result = fw.interceptor(req);
+  const result = fw.validateAndDenyAccess(req);
   assert.strictEqual(result, false);
 });
 
 test('Blocking IPv6 request', () => {
   const req = { url: '/admin', ip: '::1' };
   const fw = new Firewall({ maxReqCount: 0 });
-  const result = fw.interceptor(req);
+  const result = fw.validateAndDenyAccess(req);
   assert.strictEqual(result, true);
 });
 
@@ -124,11 +124,11 @@ test('Blocklist for IPv6', () => {
   const blockList = new BlockList();
   const fw = new Firewall({ maxReqCount: 1 }, blockList);
 
-  fw.interceptor(req);
+  fw.validateAndDenyAccess(req);
   const res1 = blockList.check(req.ip, 'ipv6');
   assert.strictEqual(res1, false);
 
-  fw.interceptor(req);
+  fw.validateAndDenyAccess(req);
   const res2 = blockList.check(req.ip, 'ipv6');
   assert.strictEqual(res2, true);
 });
@@ -139,7 +139,7 @@ test('Initialization firewall without blocklist', () => {
 
   for (const data of exampleData) {
     const { ip } = data;
-    const res = fw.interceptor({ url: '/home', ip });
+    const res = fw.validateAndDenyAccess({ url: '/home', ip });
     assert.strictEqual(res, true);
   }
 });
@@ -155,7 +155,7 @@ test('Initialization firewall with blocklist', () => {
     const check = blockList.check(ip, ipv);
     assert.strictEqual(check, true);
 
-    const res = fw.interceptor({ url: '/home', ip });
+    const res = fw.validateAndDenyAccess({ url: '/home', ip });
     assert.strictEqual(res, true);
   }
 });
@@ -181,7 +181,7 @@ test('Non-blocking interval request', async () => {
   const options = { maxReqCount: 3, reqInterval: 1000 };
   const fw = new Firewall(options);
   for (let i = 0; i <= options.maxReqCount; i++) {
-    const result = fw.interceptor(req);
+    const result = fw.validateAndDenyAccess(req);
     assert.strictEqual(result, false);
     await sleep(options.reqInterval + 50);
   }
@@ -192,7 +192,7 @@ test('Blocking interval request', async () => {
   const options = { maxReqCount: 1, reqInterval: 1000 };
   const fw = new Firewall(options);
   for (let i = 0; i < 3; i++) {
-    const result = fw.interceptor(req);
+    const result = fw.validateAndDenyAccess(req);
     if (i < options.maxReqCount) {
       assert.strictEqual(result, false);
     } else {
