@@ -44,7 +44,7 @@ class Firewall {
     this.suspiciousRequests = new Map();
   }
 
-  interceptor({ url, ip }) {
+  validateAndDenyAccess({ url, ip }) {
     if (this.whiteList.has(ip)) return false;
     const ipv = getIPv(ip);
     const blocked = this.blockList.check(ip, ipv);
