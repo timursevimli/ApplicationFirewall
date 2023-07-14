@@ -36,8 +36,8 @@ http.createServer((req, res) => {
   console.log({ blockList });
   const url = req.url;
   const ip = req.socket.remoteAddress;
-  const isBanned = firewall.interceptor({ url, ip });
-  if (isBanned) return void res.end('You are banned! :(');
+  const isDenied = firewall.validateAndDenyAccess({ url, ip });
+  if (isDenied) return void res.end('You are banned! :(');
   const data = routing[req.url];
   const type = typeof data;
   const serializer = types[type];
