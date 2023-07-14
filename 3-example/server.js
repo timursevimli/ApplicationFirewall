@@ -25,7 +25,7 @@ const types = {
   function: (fn, req, res) => JSON.stringify(fn(req, res)),
 };
 
-const options = { maxReqCount: 10, reqInterval: 5000 };
+const options = { maxReqCount: 5, reqInterval: 5000 };
 
 const blockList = new BlockList();
 blockList.addAddress('1.2.3.4', 'ipv4');
@@ -37,7 +37,10 @@ http.createServer((req, res) => {
   const url = req.url;
   const ip = req.socket.remoteAddress;
   const isDenied = firewall.validateAndDenyAccess({ url, ip });
-  if (isDenied) return void res.end('You are banned! :(');
+  if (isDenied) {
+    res.writeHead(403);
+    return void res.end('You are banned! :(');
+  }
   const data = routing[req.url];
   const type = typeof data;
   const serializer = types[type];
