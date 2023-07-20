@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const test = require('node:test');
 const { BlockList } = require('node:net');
 const suspiciousUrls = require('../../suspiciousUrls.js');
-const Firewall = require('../Firewall.js');
+const Firewall = require('../firewall.js');
 
 const now = Date.now();
 const exampleData = [
@@ -78,7 +78,7 @@ test('Whitelist', () => {
   const req = { url: '/admin', ip: '127.0.0.1' };
   const options = { maxReqCount: 0 };
   const fw = new Firewall(options);
-  fw.addAddressToWhiteList(req.ip);
+  fw.addToWhiteList(req.ip);
   const result = fw.validateAndDenyAccess(req);
   assert.strictEqual(result, false);
 });
