@@ -1,7 +1,7 @@
 'use strict';
 
 const http = require('node:http');
-const  BlockListManager = require('./BlockListManager.js');
+const  BlockListManager = require('./blockListManager.js');
 const { firewall, initFirewall } = require('./firewall.js');
 
 const now = Date.now();

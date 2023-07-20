@@ -1,7 +1,7 @@
 'use strict';
 
-const BlockListManager = require('./BlockListManager.js');
-const Suspicious = require('./Suspicious.js');
+const BlockListManager = require('./blockListManager.js');
+const Suspicious = require('./suspicious.js');
 const suspiciousUrls = require('../suspiciousUrls.js');
 const suspiciousRequests = require('./suspiciousRequests.js');
 

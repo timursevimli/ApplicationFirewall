@@ -2,7 +2,7 @@
 
 const http = require('node:http');
 const { BlockList } = require('node:net');
-const Firewall = require('./Firewall.js');
+const Firewall = require('./firewall.js');
 
 const exampleData = [{
   ip: '1.1.1.1', ipv: 'ipv4', banned: true, reqCount: 3, reqTime: 1687943365795

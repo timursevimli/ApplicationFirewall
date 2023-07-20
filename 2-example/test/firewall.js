@@ -6,7 +6,7 @@ const test = require('node:test');
 const suspiciousUrls = require('../../suspiciousUrls.js');
 const suspiciousRequests = require('../suspiciousRequests.js');
 const { firewall, initFirewall } = require('../firewall.js');
-const BlockListManager = require('../BlockListManager.js');
+const BlockListManager = require('../blockListManager.js');
 
 const sleep = (msec) => new Promise((resolve) => setTimeout(resolve, msec));
 const resetData = () =>
