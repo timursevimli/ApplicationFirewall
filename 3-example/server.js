@@ -1,18 +1,19 @@
 'use strict';
 
 const http = require('node:http');
-const { BlockList } = require('node:net');
 const Firewall = require('./firewall.js');
 
-const exampleData = [{
-  ip: '1.1.1.1', ipv: 'ipv4', banned: true, reqCount: 3, reqTime: 1687943365795
-},
-{
-  ip: '1.1.1.2', ipv: 'ipv4', banned: true, reqCunt: 3, reqTime: 1687943365795
-},
-{
-  ip: '::1', ipv: 'ipv6', banned: true, reqCount: 3, reqTime: 1687943365795,
-}];
+const exampleData = [
+  {
+    ip: '1.1.1.1', ipv: 'ipv4', reqCount: 3, reqTime: 1687943365795
+  },
+  {
+    ip: '1.1.1.2', ipv: 'ipv4', reqCunt: 3, reqTime: 1687943365795
+  },
+  {
+    ip: '::1', ipv: 'ipv6', reqCount: 6, reqTime: 1687943365795,
+  }
+];
 
 const routing = {
   '/': '<h1>welcome to homepage</h1><hr>',
@@ -27,16 +28,12 @@ const types = {
 
 const options = { maxReqCount: 5, reqInterval: 5000 };
 
-const blockList = new BlockList();
-blockList.addAddress('1.2.3.4', 'ipv4');
-
-const firewall = new Firewall(options, blockList);
+const firewall = new Firewall(options);
 
 http.createServer((req, res) => {
-  console.log({ blockList });
   const url = req.url;
   const ip = req.socket.remoteAddress;
-  const isDenied = firewall.validateAndDenyAccess({ url, ip });
+  const isDenied = firewall.check({ url, ip });
   if (isDenied) {
     res.writeHead(403);
     return void res.end('You are banned! :(');
@@ -47,6 +44,6 @@ http.createServer((req, res) => {
   const result = serializer(data, req, res);
   res.end(result);
 }).listen(8000, () => {
-  firewall.initFirewall(exampleData);
+  firewall.init(exampleData);
   console.log('Listening on port:', 8000);
 });

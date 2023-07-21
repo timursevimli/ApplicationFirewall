@@ -3,6 +3,8 @@
 const net = require('node:net');
 const suspiciousUrls = require('../suspiciousUrls.js');
 
+const { BlockList } = net;
+
 const MAX_REQ_COUNT = 5;
 const REQ_INTERVAL_MS = 10000;
 
@@ -11,17 +13,12 @@ const getIPv = (ip) => {
   if (net.isIPv6(ip)) return 'ipv6';
 };
 
-const generateSuspicious = (data) => {
-  if (typeof data === 'object') return data;
-  const { ip } = data;
-  return {
-    ip,
-    ipv: getIPv(ip),
-    reqCount: 1,
-    reqTime: Date.now(),
-    banned: false
-  };
-};
+const generateSuspicious = (ip) => ({
+  ip,
+  ipv: getIPv(ip),
+  reqCount: 1,
+  reqTime: Date.now(),
+});
 
 class Firewall {
   constructor(options = {}) {
@@ -30,7 +27,7 @@ class Firewall {
     this.suspiciousUrls = options.urls ?? suspiciousUrls;
     this.suspiciousRequests = new Map();
     this.whiteList = new Set();
-    this.blockList = new net.BlockList();
+    this.blockList = new BlockList();
   }
 
   hasWhiteList(ip) {
@@ -63,33 +60,37 @@ class Firewall {
       this.handleExisting(suspicious) :
       this.handleNew(ip);
   }
-  //TODO ban logic
+
   ban(suspicious) {
-    suspicious.banned = true;
     const { ip, ipv } = suspicious;
     this.addToBlockList(ip, ipv);
     this.suspiciousRequests.delete(ip);
     return true;
   }
 
+  handleInit(suspicious) {
+    if (this.maxRequestReached(suspicious)) return this.ban(suspicious);
+    this.suspiciousRequests.set(suspicious.ip, suspicious);
+  }
+
+  maxRequestReached({ reqCount }) {
+    return reqCount > this.maxReqCount;
+  }
+
   handleExisting(suspicious) {
-    if (suspicious.banned) {
-      const { ip, ipv } = suspicious;
-      return this.hasBlockList(ip, ipv) ? true : this.ban(suspicious);
-    }
     const now = new Date().getTime();
     const lastReqTime = suspicious.reqTime;
     suspicious.reqTime = now;
     const diff = now - lastReqTime;
     if (diff <= this.reqInterval) suspicious.reqCount++;
-    if (suspicious.reqCount <= this.maxReqCount) return false;
+    if (!this.maxRequestReached(suspicious)) return false;
     return this.ban(suspicious);
   }
 
   handleNew(ip) {
-    const suspicious = generateSuspicious({ ip });
+    const suspicious = generateSuspicious(ip);
     this.suspiciousRequests.set(ip, suspicious);
-    if (suspicious.reqCount <= this.maxReqCount) return false;
+    if (!this.maxRequestReached(suspicious)) return false;
     return this.ban(suspicious);
   }
 
@@ -103,9 +104,9 @@ class Firewall {
 
   init(datas) {
     for (const suspicious of datas) {
-      this.suspiciousRequests.set(suspicious.ip, suspicious);
-      this.handleExisting(suspicious);
+      this.handleInit(suspicious);
     }
+    return this;
   }
 }
 
