@@ -1,16 +1,17 @@
-
 'use strict';
 
 const assert = require('node:assert');
 const test = require('node:test');
-const suspiciousUrls = require('../../suspiciousUrls.js');
+const getSuspiciousUrls = require('../utils/getSuspiciousUrls.js');
 const Firewall = require('../firewall.js');
+
+const suspiciousUrls = getSuspiciousUrls('defaultUrls.txt');
 
 const now = Date.now();
 
 const exampleData = [
   { ip: '127.0.0.1', ipv: 'ipv4', reqCount: 3, reqTime: now },
-  { ip: '127.0.0.2', ipv: 'ipv4', reqCount: 3, reqTime: now   },
+  { ip: '127.0.0.2', ipv: 'ipv4', reqCount: 3, reqTime: now },
   { ip: '::1', ipv: 'ipv6', reqCount: 3, reqTime: now },
 ];
 
@@ -143,8 +144,4 @@ test('Blocking interval request', async () => {
     }
     await sleep(options.reqInterval - 50);
   }
-});
-
-test('End', () => {
-  process.exit(0);
 });

@@ -1,0 +1,39 @@
+{
+  "name": "application-firewall",
+  "version": "1.0.0",
+  "description": "Application firewall for servers",
+  "main": "firewall.js",
+  "directories": {
+    "utils": "utils"
+  },
+  "scripts": {
+    "test": "npm run lint && node ./test/firewall.js",
+    "lint": "eslint . && prettier -c '**/*.js' '**/*.json' '**/*.md'",
+    "fmt": "prettier --write '**/*.js' '**/*.json' '**/*.md'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/timursevimli/application-firewall.git"
+  },
+  "keywords": [
+    "firewall",
+    "application-firewall",
+    "http-server",
+    "tcp-server",
+    "blocklist",
+    "whitelist"
+  ],
+  "author": "Timur Sevimli <svmlitimur@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/timursevimli/application-firewall/issues",
+    "email": "svmlitimur+github@gmail.com"
+  },
+  "readmeFilename": "README.md",
+  "homepage": "https://github.com/timursevimli/application-firewall#readme",
+  "devDependencies": {
+    "@types/node": "^20.4.6",
+    "eslint": "^8.44.0",
+    "prettier": "^3.0.0"
+  }
+}
