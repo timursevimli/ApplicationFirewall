@@ -15,4 +15,4 @@ const getSuspiciousUrls = (file) => {
   return urls;
 };
 
-module.exports = getSuspiciousUrls;
+module.exports = { getSuspiciousUrls };

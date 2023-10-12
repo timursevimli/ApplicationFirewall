@@ -2,7 +2,7 @@
 
 const assert = require('node:assert');
 const test = require('node:test');
-const getSuspiciousUrls = require('../utils/getSuspiciousUrls.js');
+const { getSuspiciousUrls } = require('../utils/getSuspiciousUrls.js');
 const Firewall = require('../firewall.js');
 
 const suspiciousUrls = getSuspiciousUrls('defaultUrls.txt');

@@ -1,17 +1,10 @@
 'use strict';
 
-const net = require('node:net');
-const getSuspiciousUrls = require('./utils/getSuspiciousUrls.js');
-
-const { BlockList } = net;
+const { BlockList } = require('node:net');
+const { getSuspiciousUrls, isValidFormat, getIPv } = require('./utils');
 
 const MAX_REQ_COUNT = 5;
 const REQ_INTERVAL_MS = 10000;
-
-const getIPv = (ip) => {
-  if (net.isIPv4(ip)) return 'ipv4';
-  if (net.isIPv6(ip)) return 'ipv6';
-};
 
 const generateSuspicious = (ip) => ({
   ip,
@@ -46,12 +39,8 @@ class Firewall {
     return this.suspiciousUrls.includes(url);
   }
 
-  isValidFormat(ip) {
-    return !!getIPv(ip);
-  }
-
   check({ url, ip }) {
-    if (!this.isValidFormat(ip)) return false;
+    if (!isValidFormat(ip)) return false;
     if (this.hasWhiteList(ip)) return false;
     if (this.hasBlockList(ip)) return true;
     const suspicious = this.getSuspicious(ip);
