@@ -2,6 +2,14 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const net = require('node:net');
+
+const getIPv = (ip) => {
+  if (net.isIPv4(ip)) return 'ipv4';
+  if (net.isIPv6(ip)) return 'ipv6';
+};
+
+const isValidFormat = (ip) => !!getIPv(ip);
 
 const getSuspiciousUrls = (file) => {
   const filePath = path.join(process.cwd(), file);
@@ -15,4 +23,8 @@ const getSuspiciousUrls = (file) => {
   return urls;
 };
 
-module.exports = { getSuspiciousUrls };
+module.exports = {
+  getSuspiciousUrls,
+  getIPv,
+  isValidFormat,
+};

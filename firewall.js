@@ -1,7 +1,7 @@
 'use strict';
 
 const { BlockList } = require('node:net');
-const { getSuspiciousUrls, isValidFormat, getIPv } = require('./utils');
+const { getSuspiciousUrls, isValidFormat, getIPv } = require('./utils.js');
 
 const MAX_REQ_COUNT = 5;
 const REQ_INTERVAL_MS = 10000;
@@ -17,7 +17,7 @@ class Firewall {
   constructor(options = {}) {
     this.maxReqCount = options.maxReqCount ?? MAX_REQ_COUNT;
     this.reqInterval = options.reqInterval ?? REQ_INTERVAL_MS;
-    this.suspiciousUrls = options.urls ?? getSuspiciousUrls('defaultUrls.txt');
+    this.suspiciousUrls = options.urls ?? getSuspiciousUrls('default-urls.txt');
     this.suspiciousRequests = new Map();
     this.whiteList = new Set();
     this.blockList = new BlockList();

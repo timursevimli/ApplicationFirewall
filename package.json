@@ -7,7 +7,7 @@
     "utils": "utils"
   },
   "scripts": {
-    "test": "npm run lint && node ./test/firewall.js",
+    "test": "npm run lint && node ./test/unit.js",
     "lint": "eslint . && prettier -c '**/*.js' '**/*.json' '**/*.md'",
     "fmt": "prettier --write '**/*.js' '**/*.json' '**/*.md'"
   },
